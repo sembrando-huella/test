@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+    <title>Sembrando Huella</title>
+	<link rel=icon href=logo.png>
+	
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js'></script>
+
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+   crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+   integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+   crossorigin=""></script>
+    
+	<!-- <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/"></script> -->
+
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+	
+	<script src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+	
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/Turf.js/5.1.5/turf.min.js></script>
+	
+</head>
+<body>
+<script src="guate.geojson"></script>
+<script src="subreg.geojson"></script>
+<script src="reg.geojson"></script>
+<script src="frame.geojson"></script>
+<style>
+
+
+h2{
+	text-align:center;
+	font-size: 15pt;
+}
+
+dl {
+    border: 1px double #ccc;
+    padding: 1px;
+  }
+  dt {
+	
+    float: left;
+   padding: 0 0 0 16px;
+	clear: left;
+	
+    width: 185px;
+   
+    font-weight: bold;
+    color: green;
+  }
+  dt::after {
+    content: ":";
+  }
+ 
+  dd {
+    margin: 0 0 0 200px;
+    padding: 0 16px 0.5em 0;
+  }
+.logo{
+	align: left;
+	height: 60px;
+	width: 60px;
+	float: left;
+	margin-left: 15px;
+	margin-right: 22px;
+}
+
+.header{
+	align: center;
+	clear: right;
+	padding: 10px 0 40px 0;
+
+
+
+}
+.conte{
+	clear:left;
+}
+.logoInab{ 
+	height: 90px;
+	width: 146px;
+}
+
+.logo2{
+	align: right;
+	height: 60px;
+	width: 97px;
+	float: right;
+}
+</style>
+
+<div id="map" style="width: 100vw; height: 100vh;"></div>
+<script>
+
+
+
+	$.getJSON('https://api.sheety.co/e63bfa0b-68d2-4a7d-9a07-9d084fe59eab', function(json) {
+		addPoints(json);
+	});
+	
+	var subregStyle = { //estilo para las lineas de subregiones
+		"color": "#ff7800",	
+		"weight": 1,
+		"opacity": 0.3,
+		"fillColor": "#FBF3A3",
+		"fillOpacity": 0
+		
+	}
+	var regStyle = { //estilo para las lineas de regiones
+		"color": "#ff7800",	
+		"weight": 3,
+		"opacity": 0.6,
+		"fillColor": "#ffffff",
+		"fillOpacity": 0
+		
+	}
+		var frameStyle = { //estilo para el resto del mundo
+		"color": "#ff7800",	
+		"weight": 3,
+		"opacity": 0,
+		"fillColor": "#ffffff",
+		"fillOpacity": 0.5
+		
+	}
+	var map = L.map('map').setView([15.316175, -90.402719], 4);
+	
+	    //logo inab sobre el mapa
+    var logo_inab = L.control({position: 'topright'});
+    logo_inab.onAdd = function(map){
+        var div = L.DomUtil.create('div', 'logodiv');
+        div.innerHTML= "<img src='inab-logo.png' class='logoInab'/>";
+        return div;
+    }
+	
+    logo_inab.addTo(map);
+	
+	var guateLayer = L.geoJSON();
+	guateLayer.addData(guate);
+	//guateLayer.addTo(map);
+
+	
+	var subreglyr = L.geoJSON();
+	subreglyr.addData(subreg);
+	subreglyr.addTo(map);
+	subreglyr.setStyle(subregStyle);
+	
+	var framelyr = L.geoJSON();
+	framelyr.addData(frame);
+	framelyr.addTo(map);
+	framelyr.setStyle(frameStyle);
+	
+	var reglyr = L.geoJSON();
+	reglyr.addData(reg);
+	reglyr.addTo(map);
+	reglyr.setStyle(regStyle);
+	
+	//Mapa de fondo 
+	var Thunderforest_Pioneer = L.tileLayer('https://tile.thunderforest.com/pioneer/{z}/{x}/{y}.png?apikey=45d2630d5e6c400caad9897e25633ccd', {
+	attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	apikey: '<45d2630d5e6c400caad9897e25633ccd>',
+	maxZoom: 22,
+	});
+	 map.addLayer(Thunderforest_Pioneer);
+	//----------------------------------------
+	
+	var pointGroupLayer; //crear la capa donde van a ir los puntos
+	
+	function addPoints(data) {
+	if (pointGroupLayer != null) {
+		pointGroupLayer.remove();
+	}
+	
+	pointGroupLayer = L.featureGroup().addTo(map);
+	
+	var subregturf = subreglyr.toGeoJSON();
+	
+	for(var row = 0; row < data.length; row++) {
+		
+		if (data[row].y > 13.8 && data[row].jornada === 1){
+		
+		//----------------turf js--------------------------
+		var pt1 = turf.point([data[row].x, data[row].y]);
+		var ptsTurf = turf.featureCollection([pt1]);
+		if (!ptsTurf.properties) ptsTurf.properties = {};if (ptsTurf.properties['excelPt'] === undefined) {ptsTurf.properties['excelPt'] = data[row].subreg_no};
+		var puntoMapa = turf.tag(ptsTurf, subregturf, 'SubReg_cod', 'subreg_mapa');
+		
+		
+		//------------------------------------------
+			// bloque para crear un array con las instituciones colaboradoras sin que se repitan los nombres
+			var inst1 = new Array();
+			var inst2 = new Array();
+			if (data[row].coordinadora != null ){inst1 = data[row].coordinadora.split(/,|;/)};
+			if (data[row].colaboradores != null ){inst2 = data[row].colaboradores.split(/,|;/)};
+			
+			for(var i = 0; i < inst1.length; i++){ //ciclo para eliminar las palabras repetidas
+				inst2 = inst2.filter(function(palabra) {
+				return palabra != inst1[i];
+				});		
+			}
+			
+		
+			var instituciones =(inst1.concat(inst2).length == 0) ? "" :("</dd><dt>Instituciones colaboradoras </dt><dd>" + inst1.concat(inst2).join('; ')); //añade punto y coma como separador entre elementos del array
+			//FIN DE BLOQUE PARA CREAR ARRAY DE INSTITUCIONES COLABORADORAS
+			
+			var arboles = (
+			data[row].plantas === null ? "" :
+			data[row].plantas === 0 ? "" : ("</dd><dt>Árboles reforestados </dt><dd>"+ data[row].plantas)); //muestra la linea de arboles sembrados solo cuando existe el dato
+			
+			var areaRef = (
+			data[row].hectareas === null ? "" :
+			data[row].hectareas === 0 ? "" : ("</dd><dt>Área reforestada</dt><dd>"+ data[row].hectareas +" Ha" ));
+			
+			var especies = (
+			data[row].sp === null ? "" :
+			data[row].sp === "" ? "" : ("</dd><dt>Especies utilizadas</dt><dd>"+ data[row].sp));
+			
+			
+			var marker = L.marker([data[row].y, data[row].x]).addTo(pointGroupLayer);
+			marker.bindPopup("<dl>" + "<table style='width:100%'><tr><th><img src='logo.png' class='logo'></th><th><h2>Información</h2></th><th><img src='inab-logo.png' class='logo2'></table></th></tr><div class='conten'><dt>Subregión </dt><dd>" + data[row].subreg + "</dd><dt>Fecha </dt><dd>"+ data[row].fecha + areaRef + arboles + especies + "</dd><h2>Amigos del Bosque</h2><dt>Total de participantes </dt><dd>"+ data[row].total + instituciones + "</dd></div></dl>",
+			{
+			maxWidth: 500,
+			maxHeight: 700
+			
+			});
+			// icon
+			var icon = L.icon({ //icono de los puntos
+				iconUrl: 'icon.png',
+				iconSize:     [16, 20], // size of the icon
+				iconAnchor:   [8, 20],
+				popupAnchor: [0, -18],
+			});
+			var iconMalo = L.icon({ //icono de los puntos
+				iconUrl: 'equis.png',
+				iconSize:     [16, 20], // size of the icon
+				iconAnchor:   [8, 20],
+				popupAnchor: [0, -18],
+			});
+			
+			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
+			marker.setIcon(icon);
+			}else {console.log(row); marker.setIcon(iconMalo);}
+			}
+			
+		}
+		
+	
+		map.fitBounds(guateLayer.getBounds());
+		
+	
+	
+	
+}		
+</script>
+
+
+
+</body>
+</html>
