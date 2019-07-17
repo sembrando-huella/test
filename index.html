@@ -259,7 +259,7 @@ dl {
 			marker.setIcon(icon);
 			}else {console.log("region erronea: "+row); marker.setIcon(iconMalo); regErr++;}
 			
-			}else {totErr++; if (data[row].y === ""){console.log("vacia: "+row)}else{console.log("fuera del mapa: "+row); fueraErr++;}}
+			}else {totErr++; if (data[row].y === null){console.log("vacia: "+row)}else{console.log("fuera del mapa: "+row); fueraErr++;}}
 			
 		}
 		console.log("TOTAL fuera de region: "+regErr);
