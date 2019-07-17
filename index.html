@@ -188,7 +188,12 @@ dl {
 	
 	pointGroupLayer = L.featureGroup().addTo(map);
 	var subregturf = subreglyr.toGeoJSON();
-	
+		//variables para guardar la cantidad de errores segun tipo de error
+	var totErr=0;
+	var emptyErr=0;
+	var regErr=0;
+	var fueraErr=0;
+		
 	for(var row = 0; row < data.length; row++) {
 		if (data[row].y > 13.8 && data[row].jornada === 1){
 		
@@ -252,11 +257,14 @@ dl {
 			
 			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
 			marker.setIcon(icon);
-			}else {console.log("region erronea: "+row); marker.setIcon(iconMalo);}
+			}else {console.log("region erronea: "+row); marker.setIcon(iconMalo); regErr++}
 			
-			}else {console.log("fuera del mapa: "+row);}
+			}else {totErr++; if (data[row].y === ""){console.log("vacia: "+row}else{console.log("fuera del mapa: "+row); fueraErr++}}
 			
 		}
+		console.log("TOTAL fuera de region: "+regErr);
+		console.log("TOTAL fuera del mapa: "+fueraErr;
+		console.log("TOTAL vacias: "+(totErr-fueraErr);
 		map.fitBounds(guateLayer.getBounds());
 		
 	
