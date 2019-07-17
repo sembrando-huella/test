@@ -252,7 +252,7 @@ dl {
 			
 			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
 			marker.setIcon(icon);
-			}else {console.log(row); marker.setIcon(iconMalo);}
+			}else {console.log("region erronea: "+row); marker.setIcon(iconMalo);}
 			
 			}else {console.log("fuera del mapa: "+row);}
 			
