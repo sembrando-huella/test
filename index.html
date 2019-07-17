@@ -257,9 +257,9 @@ dl {
 			
 			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
 			marker.setIcon(icon);
-			}else {console.log("region erronea: "+row); marker.setIcon(iconMalo); regErr++;}
+			}else {console.log("region erronea: "+(2+row)); marker.setIcon(iconMalo); regErr++;}
 			
-			}else {totErr++; if (data[row].y === null){console.log("vacia: "+row)}else{console.log("fuera del mapa: "+row); fueraErr++;}}
+			}else {totErr++; if (data[row].y === null){console.log("vacia: "+(2+row))}else{console.log("fuera del mapa: "+(2+row)); fueraErr++;}}
 			
 		}
 		console.log("TOTAL fuera de region: "+regErr);
