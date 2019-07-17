@@ -243,6 +243,12 @@ dl {
 				iconAnchor:   [8, 20],
 				popupAnchor: [0, -18],
 			});
+			var iconMalo = L.icon({ //icono de los puntos
+				iconUrl: 'equis.png',
+				iconSize:     [16, 20], // size of the icon
+				iconAnchor:   [8, 20],
+				popupAnchor: [0, -18],
+			});
 			
 			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
 			marker.setIcon(icon);
