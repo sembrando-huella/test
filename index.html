@@ -268,7 +268,7 @@ dl {
 		console.log("TOTAL vacias: "+(totErr-fueraErr));
 		map.fitBounds(guateLayer.getBounds());
 		
-		document.getElementById("descargar").addEventListener("click", descargarExcel());
+		document.getElementById("descargar").addEventListener("click", descargarExcel);
 		function descargarExcel(){
 			var xls = new xlsExport(data, 'title');
 			 xls.exportToXLS('export.xls')
