@@ -34,6 +34,9 @@
 	<script src=https://cdnjs.cloudflare.com/ajax/libs/Turf.js/5.1.5/turf.min.js></script>
 	<script src="xls-export.js"></script>
 	
+	<script src="proj4.js"></script>
+	<script src="proj4leaflet.js"></script>
+	
 </head>
 <body>
 <script src="guate.geojson"></script>
@@ -103,7 +106,7 @@ dl {
 <button id="descargar">Descargar con errores</button>
 <div id="map" style="width: 100vw; height: 100vh;"></div>
 <script>
-	$.getJSON('https://api.sheety.co/e63bfa0b-68d2-4a7d-9a07-9d084fe59eab', function(json) {
+	$.getJSON('https://api.sheety.co/9a4122ae-99ef-4da4-a494-ff7c16961d7a', function(json) {
 		addPoints(json);
 	});
 	
@@ -170,6 +173,8 @@ dl {
 	reglyr.addData(reg);
 	reglyr.addTo(map);
 	reglyr.setStyle(regStyle);
+		
+	proj4.defs("SR-ORG:6866", "+proj=tmerc +lat_0=0 +lon_0=-90.5 +k=0.9998 +x_0=500000 +y_0=0 +ellps=WGS84 +units=m +no_defs ");
 	
 	//Mapa de fondo 
 	var Thunderforest_Pioneer = L.tileLayer('https://tile.thunderforest.com/pioneer/{z}/{x}/{y}.png?apikey=45d2630d5e6c400caad9897e25633ccd', {
@@ -194,18 +199,42 @@ dl {
 	var emptyErr=0;
 	var regErr=0;
 	var fueraErr=0;
+	
+	
 		
 	for(var row = 0; row < data.length; row++) {
-		if (data[row].y > 13.8 && data[row].jornada === 1){
+		data[row].x_geografic = "";
+		data[row].y_geografic ="";
+		if (data[row].y > 0 && data[row].jornada === 1){
 		
-				//----------------turf js--------------------------
-		var pt1 = turf.point([data[row].x, data[row].y]);
-		var ptsTurf = turf.featureCollection([pt1]);
+		//---------------------geoJSON para proyectar de GTM a geog ------------------
+		var puntoProject = {
+			  "type": "Feature",
+			  "geometry": {
+				"type": "Point",
+				"coordinates": [data[row].x, data[row].y]
+			  },
+			  "crs": {
+				"type": "name",
+				"properties": {
+				  "name": "SR-ORG:6866"
+				}
+			  }
+			};
+						 
+		//------------------------------------------
+		//----------------turf js--------------------------
+		//var pt1 = turf.point([data[row].x, data[row].y]);
+		var ptsTurf = L.Proj.geoJson(puntoProject).toGeoJSON();
 		if (!ptsTurf.properties) ptsTurf.properties = {};if (ptsTurf.properties['excelPt'] === undefined) {ptsTurf.properties['excelPt'] = data[row].subreg_no};
 		var puntoMapa = turf.tag(ptsTurf, subregturf, 'SubReg_cod', 'subreg_mapa');
+		//---------------------fin turf---------------+
+		
+		//-------------agregar columna con coordenadas pasadas a geograficas(para tener en la tabla descargada)------------------
+		data[row].x_geografic = ptsTurf.features[0].geometry.coordinates[0];
+		data[row].y_geografic = ptsTurf.features[0].geometry.coordinates[1];
 		
 		
-		//------------------------------------------
 			// bloque para crear un array con las instituciones colaboradoras sin que se repitan los nombres
 			var inst1 = new Array();
 			var inst2 = new Array();
@@ -233,34 +262,42 @@ dl {
 			var especies = (
 			data[row].sp === null ? "" :
 			data[row].sp === "" ? "" : ("</dd><dt>Especies utilizadas</dt><dd>"+ data[row].sp));
+		
 			
 			
-			var marker = L.marker([data[row].y, data[row].x]).addTo(pointGroupLayer);
-			marker.bindPopup("<dl>" + "<table style='width:100%'><tr><th><img src='logo.png' class='logo'></th><th><h2>Información</h2></th><th><img src='inab-logo.png' class='logo2'></table></th></tr><div class='conten'><dt>Subregión </dt><dd>" + data[row].subreg + "</dd><dt>Fecha </dt><dd>"+ data[row].fecha + areaRef + arboles + especies + "</dd><h2>Amigos del Bosque</h2><dt>Total de participantes </dt><dd>"+ data[row].total + instituciones + "</dd></div></dl>",
-			{
-			maxWidth: 500,
-			maxHeight: 700
-			
-			});
-			// icon
-			var icon = L.icon({ //icono de los puntos
-				iconUrl: 'icon.png',
-				iconSize:     [16, 20], // size of the icon
-				iconAnchor:   [8, 20],
-				popupAnchor: [0, -18],
-			});
-			var iconMalo = L.icon({ //icono de los puntos
+			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
+				// icon
+				var icon = L.icon({ //icono de los puntos
+					iconUrl: 'icon.png',
+					iconSize:     [16, 20], // size of the icon
+					iconAnchor:   [8, 20],
+					popupAnchor: [0, -18],
+				});
+			}else {
+				data[row].error = "mala"; console.log("region erronea: "+(2+row)); regErr++;
+				var icon = L.icon({ //icono de los puntos
 				iconUrl: 'equis.png',
 				iconSize:     [16, 20], // size of the icon
 				iconAnchor:   [8, 20],
 				popupAnchor: [0, -18],
-			});
+				});
+			}
 			
-			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
-			marker.setIcon(icon);
-			}else {data[row].error = "mala"; console.log("region erronea: "+(2+row)); marker.setIcon(iconMalo); regErr++;}
+			var marker = L.Proj.geoJson(puntoProject, {
+				pointToLayer: function (feature, latlng) {return L.marker(latlng, {icon: icon});}});
+				marker.addTo(pointGroupLayer);
+				marker.bindPopup("<dl>" + "<table style='width:100%'><tr><th><img src='logo.png' class='logo'></th><th><h2>Información</h2></th><th><img src='inab-logo.png' class='logo2'></table></th></tr><div class='conten'><dt>Subregión </dt><dd>" + data[row].subreg + "</dd><dt>Fecha </dt><dd>"+ data[row].fecha + areaRef + arboles + especies + "</dd><h2>Amigos del Bosque</h2><dt>Total de participantes </dt><dd>"+ data[row].total + instituciones +"</dd></div></dl>",
+				{
+				maxWidth: 500,
+				maxHeight: 700
+				
+				});
+				
+			var marker_leaflet_id = marker._leaflet_id.toString();
+			//console.log(marker._layers[marker_leaflet_id-1]._latlng);// PRUEBA PARA IMPRIMIR COORDENADAS CONVERTIDAS A GEOGRAFICAS desde el excel en gtm
 			
 			}else {data[row].error = "mala"; totErr++; if (data[row].y === null){console.log("vacia: "+(2+row))}else{console.log("fuera del mapa: "+(2+row)); fueraErr++;}}
+				
 			
 		}
 		console.log("TOTAL fuera de region: "+regErr);
