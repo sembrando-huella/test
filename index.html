@@ -266,6 +266,7 @@ dl {
 			
 			
 			if(puntoMapa.properties['excelPt'] === puntoMapa.features[0].properties['subreg_mapa']){
+				data[row].error = "";
 				// icon
 				var icon = L.icon({ //icono de los puntos
 					iconUrl: 'icon.png',
@@ -282,7 +283,7 @@ dl {
 				popupAnchor: [0, -18],
 				});
 			}
-			
+			if(inst1.concat(inst2).join('; ') != null){data[row].instit_concat = inst1.concat(inst2).join('; ');}else{data[row].instit_concat = "";}
 			var marker = L.Proj.geoJson(puntoProject, {
 				pointToLayer: function (feature, latlng) {return L.marker(latlng, {icon: icon});}});
 				marker.addTo(pointGroupLayer);
